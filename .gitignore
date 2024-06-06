@@ -1,0 +1,8 @@
+__pycache__/
+runs/
+train2017.zip
+utils/dataloaders.pdf
+data/get_coco.sh
+*.pt
+*.pyc
+*.pdf

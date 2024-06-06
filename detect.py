@@ -9,8 +9,8 @@ import torch
 FILE = Path(__file__).resolve()
 ROOT = FILE.parents[0]  # YOLO root directory
 if str(ROOT) not in sys.path:
-    sys.path.append(str(ROOT))  # add ROOT to PATH
-ROOT = Path(os.path.relpath(ROOT, Path.cwd()))  # relative
+    sys.path.append(str(ROOT)) # add ROOT to PATH
+ROOT = Path(os.path.relpath(ROOT, Path.cwd())) # relative
 
 from models.common import DetectMultiBackend
 from utils.dataloaders import IMG_FORMATS, VID_FORMATS, LoadImages, LoadScreenshots, LoadStreams
@@ -19,57 +19,58 @@ from utils.general import (LOGGER, Profile, check_file, check_img_size, check_im
 from utils.plots import Annotator, colors, save_one_box
 from utils.torch_utils import select_device, smart_inference_mode
 
-
-@smart_inference_mode()
+@smart_inference_mode() # YOLOモデルの実行を行う関数
 def run(
-        weights=ROOT / 'yolo.pt',  # model path or triton URL
+        weights=ROOT / 'yolo.pt',  # モデル重みファイルのパス
         source=ROOT / 'data/images',  # file/dir/URL/glob/screen/0(webcam)
         data=ROOT / 'data/coco.yaml',  # dataset.yaml path
-        imgsz=(640, 640),  # inference size (height, width)
+        imgsz=(640, 640),  # 推論サイズ(height, width)
         conf_thres=0.25,  # confidence threshold
         iou_thres=0.45,  # NMS IOU threshold
-        max_det=1000,  # maximum detections per image
+        max_det=1000,  # 1画像あたりの最大検出数
         device='',  # cuda device, i.e. 0 or 0,1,2,3 or cpu
         view_img=False,  # show results
         save_txt=False,  # save results to *.txt
-        save_conf=False,  # save confidences in --save-txt labels
-        save_crop=False,  # save cropped prediction boxes
-        nosave=False,  # do not save images/videos
+        save_conf=False,  # --save-txtラベルに信頼度を保存
+        save_crop=False,  # 切り取られた予測ボックスを保存
+        nosave=False,  # 画像/ビデオを保存しない
         classes=None,  # filter by class: --class 0, or --class 0 2 3
         agnostic_nms=False,  # class-agnostic NMS
         augment=False,  # augmented inference
-        visualize=False,  # visualize features
-        update=False,  # update all models
+        visualize=False,  # 特徴の可視化
+        update=False,  # 全てのモデルの更新
         project=ROOT / 'runs/detect',  # save results to project/name
         name='exp',  # save results to project/name
         exist_ok=False,  # existing project/name ok, do not increment
         line_thickness=3,  # bounding box thickness (pixels)
-        hide_labels=False,  # hide labels
-        hide_conf=False,  # hide confidences
+        hide_labels=False,  # ラベルを非表示
+        hide_conf=False,  # 信頼度を非表示
         half=False,  # use FP16 half-precision inference
         dnn=False,  # use OpenCV DNN for ONNX inference
         vid_stride=1,  # video frame-rate stride
 ):
-    source = str(source)
-    save_img = not nosave and not source.endswith('.txt')  # save inference images
-    is_file = Path(source).suffix[1:] in (IMG_FORMATS + VID_FORMATS)
-    is_url = source.lower().startswith(('rtsp://', 'rtmp://', 'http://', 'https://'))
-    webcam = source.isnumeric() or source.endswith('.txt') or (is_url and not is_file)
-    screenshot = source.lower().startswith('screen')
+    source = str(source) # 入力パスを文字列に変換
+    save_img = not nosave and not source.endswith('.txt')  # 画像の保存を行うかどうかを決定
+    is_file = Path(source).suffix[1:] in (IMG_FORMATS + VID_FORMATS) # 入力がファイルかどうかを判定
+    is_url = source.lower().startswith(('rtsp://', 'rtmp://', 'http://', 'https://')) # 入力がURLかどうかを判定
+    webcam = source.isnumeric() or source.endswith('.txt') or (is_url and not is_file) # 入力がウェブカメラかどうかを判定
+    screenshot = source.lower().startswith('screen') # 入力がスクリーンキャプチャかどうかを判定
+    # URLからファイルをダウンロード
     if is_url and is_file:
-        source = check_file(source)  # download
+        source = check_file(source)
 
-    # Directories
+    # 結果の保存ディレクトリを作成
     save_dir = increment_path(Path(project) / name, exist_ok=exist_ok)  # increment run
     (save_dir / 'labels' if save_txt else save_dir).mkdir(parents=True, exist_ok=True)  # make dir
 
-    # Load model
+    # デバイスの選択
     device = select_device(device)
+    # YOLOモデルのロード
     model = DetectMultiBackend(weights, device=device, dnn=dnn, data=data, fp16=half)
     stride, names, pt = model.stride, model.names, model.pt
     imgsz = check_img_size(imgsz, s=stride)  # check image size
 
-    # Dataloader
+    # データローダーの作成
     bs = 1  # batch_size
     if webcam:
         view_img = check_imshow(warn=True)
@@ -81,10 +82,11 @@ def run(
         dataset = LoadImages(source, img_size=imgsz, stride=stride, auto=pt, vid_stride=vid_stride)
     vid_path, vid_writer = [None] * bs, [None] * bs
 
-    # Run inference
+    # 推論の実行
     model.warmup(imgsz=(1 if pt or model.triton else bs, 3, *imgsz))  # warmup
     seen, windows, dt = 0, [], (Profile(), Profile(), Profile())
     for path, im, im0s, vid_cap, s in dataset:
+        # 画像の前処理
         with dt[0]:
             im = torch.from_numpy(im).to(model.device)
             im = im.half() if model.fp16 else im.float()  # uint8 to fp16/32
@@ -92,7 +94,7 @@ def run(
             if len(im.shape) == 3:
                 im = im[None]  # expand for batch dim
 
-        # Inference
+        # 推論
         with dt[1]:
             visualize = increment_path(save_dir / Path(path).stem, mkdir=True) if visualize else False
             pred = model(im, augment=augment, visualize=visualize)
@@ -104,7 +106,7 @@ def run(
         # Second-stage classifier (optional)
         # pred = utils.general.apply_classifier(pred, classifier_model, im, im0s)
 
-        # Process predictions
+        # 予測の処理
         for i, det in enumerate(pred):  # per image
             seen += 1
             if webcam:  # batch_size >= 1
@@ -186,7 +188,7 @@ def run(
         strip_optimizer(weights[0])  # update model (to fix SourceChangeWarning)
 
 
-def parse_opt():
+def parse_opt(): # コマンドライン引数を解析する関数
     parser = argparse.ArgumentParser()
     parser.add_argument('--weights', nargs='+', type=str, default=ROOT / 'yolo.pt', help='model path or triton URL')
     parser.add_argument('--source', type=str, default=ROOT / 'data/images', help='file/dir/URL/glob/screen/0(webcam)')
