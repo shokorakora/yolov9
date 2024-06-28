@@ -26,7 +26,7 @@ def run(
         weights=ROOT / 'yolo.pt',  # weights path
         imgsz=640,  # inference size (pixels)
         batch_size=1,  # batch size
-        data=ROOT / 'data/coco.yaml',  # dataset.yaml path
+        data=ROOT / 'data/llvip.yaml',  # dataset.yaml path
         device='',  # cuda device, i.e. 0 or 0,1,2,3 or cpu
         half=False,  # use FP16 half-precision inference
         test=False,  # test exports only

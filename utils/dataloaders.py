@@ -278,6 +278,7 @@ class LoadImages:
             raise StopIteration
         path = self.files[self.count]
 
+        #　ここ
         if self.video_flag[self.count]:
             # Read video
             self.mode = 'video'
@@ -303,11 +304,12 @@ class LoadImages:
             im0 = cv2.imread(path)  # BGR
             assert im0 is not None, f'Image Not Found {path}'
             s = f'image {self.count}/{self.nf} {path}: '
-
+            #　ここ
         if self.transforms:
             im = self.transforms(im0)  # transforms
         else:
             im = letterbox(im0, self.img_size, stride=self.stride, auto=self.auto)[0]  # padded resize
+            #　ここ
             im = im.transpose((2, 0, 1))[::-1]  # HWC to CHW, BGR to RGB
             im = np.ascontiguousarray(im)  # contiguous
 
@@ -727,8 +729,20 @@ class LoadImagesAndLabels(Dataset):
             if fn.exists():  # load npy
                 im = np.load(fn)
             else:  # read image
-                im = cv2.imread(f)  # BGR
-                print("fの値は",f)
+                # im = cv2.imread(f)  # BGR
+                # print("fの値は",f)
+                ind = f.rfind("/")
+                f1 = f[:ind] + "-infrared/" + f[ind+1:]
+
+                img0 = cv2.imread(f)  # BGR
+                img1 = cv2.imread(f1, cv2.IMREAD_GRAYSCALE)  # Gray
+                b, g, r = cv2.split(img0)
+                gray = cv2.split(img1)
+                try:
+                    im = cv2.merge([b, g, r, gray[0]])
+                except IndexError as e:
+                    print(">", gray)
+                    print(e)
                 assert im is not None, f'Image Not Found {f}'
             h0, w0 = im.shape[:2]  # orig hw
             r = self.img_size / max(h0, w0)  # ratio
