@@ -278,7 +278,9 @@ class LoadImages:
             raise StopIteration
         path = self.files[self.count]
 
-        #　ここ
+        ind = path.rfind("/")
+        path1 = path[:ind] + "-infrared/" + path[ind+1:]
+
         if self.video_flag[self.count]:
             # Read video
             self.mode = 'video'
@@ -304,12 +306,16 @@ class LoadImages:
             im0 = cv2.imread(path)  # BGR
             assert im0 is not None, f'Image Not Found {path}'
             s = f'image {self.count}/{self.nf} {path}: '
-            #　ここ
+
+            im1 = cv2.imread(path1, cv2.IMREAD_GRAYSCALE)  # Gray
+            b, g, r = cv2.split(im0)
+            gray = cv2.split(im1)
+            img_gray = cv2.merge([b, g, r, gray[0]])
+
         if self.transforms:
             im = self.transforms(im0)  # transforms
         else:
-            im = letterbox(im0, self.img_size, stride=self.stride, auto=self.auto)[0]  # padded resize
-            #　ここ
+            im = letterbox(img_gray, self.img_size, stride=self.stride, auto=self.auto)[0]  # padded resize
             im = im.transpose((2, 0, 1))[::-1]  # HWC to CHW, BGR to RGB
             im = np.ascontiguousarray(im)  # contiguous
 
@@ -694,7 +700,7 @@ class LoadImagesAndLabels(Dataset):
             nl = len(labels)  # update after albumentations
 
             # HSV color-space
-            augment_hsv(img, hgain=hyp['hsv_h'], sgain=hyp['hsv_s'], vgain=hyp['hsv_v'])
+            img = augment_hsv(img, hgain=hyp['hsv_h'], sgain=hyp['hsv_s'], vgain=hyp['hsv_v'])
 
             # Flip up-down
             if random.random() < hyp['flipud']:

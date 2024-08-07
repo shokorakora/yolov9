@@ -1,7 +1,7 @@
 import torch
 
 
-def _create(name, pretrained=True, channels=3, classes=80, autoshape=True, verbose=True, device=None):
+def _create(name, pretrained=True, channels=4, classes=80, autoshape=True, verbose=True, device=None):
     """Creates or loads a YOLO model
 
     Arguments:
@@ -32,7 +32,7 @@ def _create(name, pretrained=True, channels=3, classes=80, autoshape=True, verbo
     path = name.with_suffix('.pt') if name.suffix == '' and not name.is_dir() else name  # checkpoint path
     try:
         device = select_device(device)
-        if pretrained and channels == 3 and classes == 80:
+        if pretrained and channels == 4 and classes == 80:
             try:
                 model = DetectMultiBackend(path, device=device, fuse=autoshape)  # detection model
                 if autoshape:
@@ -87,7 +87,7 @@ if __name__ == '__main__':
     print_args(vars(opt))
 
     # Model
-    model = _create(name=opt.model, pretrained=True, channels=3, classes=80, autoshape=True, verbose=True)
+    model = _create(name=opt.model, pretrained=True, channels=4, classes=80, autoshape=True, verbose=True)
     # model = custom(path='path/to/model.pt')  # custom
 
     # Images
