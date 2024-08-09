@@ -737,15 +737,15 @@ class LoadImagesAndLabels(Dataset):
             else:  # read image
                 # im = cv2.imread(f)  # BGR
                 # print("fの値は",f)
-                ind = f.rfind("/")
-                f1 = f[:ind] + "-infrared/" + f[ind+1:]
+                ind = f.rfind("/") # color pass
+                f1 = f[:ind] + "-infrared/" + f[ind+1:] # IR pass
 
                 img0 = cv2.imread(f)  # BGR
-                img1 = cv2.imread(f1, cv2.IMREAD_GRAYSCALE)  # Gray
-                b, g, r = cv2.split(img0)
+                img1 = cv2.imread(f1, cv2.IMREAD_GRAYSCALE)  # IR→Gray
+                b, g, r = cv2.split(img0) # color→RGB
                 gray = cv2.split(img1)
                 try:
-                    im = cv2.merge([b, g, r, gray[0]])
+                    im = cv2.merge([b, g, r, gray[0]]) #4ch
                 except IndexError as e:
                     print(">", gray)
                     print(e)
@@ -1065,13 +1065,13 @@ class HUBDatasetStats():
 
     Usage
         from utils.dataloaders import HUBDatasetStats
-        stats = HUBDatasetStats('coco128.yaml', autodownload=True)  # usage 1
+        stats = HUBDatasetStats('corn.yaml', autodownload=True)  # usage 1
         stats = HUBDatasetStats('path/to/coco128.zip')  # usage 2
         stats.get_json(save=False)
         stats.process_images()
     """
 
-    def __init__(self, path='coco128.yaml', autodownload=False):
+    def __init__(self, path='corn.yaml', autodownload=False):
         # Initialize class
         zipped, data_dir, yaml_path = self._unzip(Path(path))
         try:

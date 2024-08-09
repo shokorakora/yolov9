@@ -1,0 +1,10 @@
+path: ../datasets/corn  # dataset root dir
+train: ./images/train
+val: ./images/val
+test: ./images/test
+
+# Classes
+nc: 1  # number of classes
+
+names:
+  0: corn
